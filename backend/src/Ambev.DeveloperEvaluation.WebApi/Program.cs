@@ -31,7 +31,7 @@ public static class Program
 
             builder.Services.AddDbContext<DefaultContext>(options =>
                 options.UseNpgsql(
-                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    builder.Configuration.GetConnectionString("PostgreSqlConnection"),
                     b => b.MigrationsAssembly("Ambev.DeveloperEvaluation.ORM")
                 )
             );
