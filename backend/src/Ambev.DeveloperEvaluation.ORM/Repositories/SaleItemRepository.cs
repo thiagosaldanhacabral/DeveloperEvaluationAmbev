@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
@@ -10,14 +11,16 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 public class SaleItemRepository : ISaleItemRepository
 {
     private readonly DefaultContext _context;
+    private readonly IMongoCollection<SaleItem> _mongoCollection;
 
     /// <summary>
     /// Initializes a new instance of SaleItemRepository.
     /// </summary>
     /// <param name="context">The database context.</param>
-    public SaleItemRepository(DefaultContext context)
+    public SaleItemRepository(DefaultContext context, IMongoCollection<SaleItem> mongoCollection)
     {
         _context = context;
+        _mongoCollection = mongoCollection;
     }
 
     /// <summary>
@@ -30,6 +33,8 @@ public class SaleItemRepository : ISaleItemRepository
     {
         await _context.SaleItems.AddAsync(saleItem, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mongoCollection.InsertOneAsync(saleItem, cancellationToken: cancellationToken);
         return saleItem;
     }
 
@@ -84,7 +89,9 @@ public class SaleItemRepository : ISaleItemRepository
 
         _context.SaleItems.Remove(saleItem);
         await _context.SaveChangesAsync(cancellationToken);
-        return true;
+
+        var deleteResult = await _mongoCollection.DeleteOneAsync(si => si.Id == id, cancellationToken);
+        return deleteResult.DeletedCount > 0;
     }
 
     /// <summary>
@@ -97,6 +104,8 @@ public class SaleItemRepository : ISaleItemRepository
     {
         _context.SaleItems.Update(saleItem);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mongoCollection.ReplaceOneAsync(si => si.Id == saleItem.Id, saleItem, cancellationToken: cancellationToken);
         return saleItem;
     }
 }

@@ -1,27 +1,31 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
 /// <summary>
-/// Implementation of IExternalBranchRepository using Entity Framework Core.
+/// Implementation of IExternalBranchRepository using Entity Framework Core and MongoDB.
 /// </summary>
 public class ExternalBranchRepository : IExternalBranchRepository
 {
     private readonly DefaultContext _context;
+    private readonly IMongoCollection<ExternalBranch> _mongoCollection;
 
     /// <summary>
     /// Initializes a new instance of ExternalBranchRepository.
     /// </summary>
     /// <param name="context">The database context.</param>
-    public ExternalBranchRepository(DefaultContext context)
+    /// <param name="mongoDbContext">The MongoDB context.</param>
+    public ExternalBranchRepository(DefaultContext context, MongoDbContext mongoDbContext)
     {
         _context = context;
+        _mongoCollection = mongoDbContext.GetCollection<ExternalBranch>("ExternalBranches");
     }
 
     /// <summary>
-    /// Creates a new branch in the database.
+    /// Creates a new branch in the database and MongoDB.
     /// </summary>
     /// <param name="branch">The branch to create.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -30,11 +34,14 @@ public class ExternalBranchRepository : IExternalBranchRepository
     {
         await _context.ExternalBranches.AddAsync(branch, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mongoCollection.InsertOneAsync(branch, cancellationToken: cancellationToken);
+
         return branch;
     }
 
     /// <summary>
-    /// Retrieves a branch by its unique identifier.
+    /// Retrieves a branch by its unique identifier from PostgreSQL.
     /// </summary>
     /// <param name="id">The unique identifier of the branch.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -45,7 +52,18 @@ public class ExternalBranchRepository : IExternalBranchRepository
     }
 
     /// <summary>
-    /// Retrieves branches by their name.
+    /// Retrieves a branch by its unique identifier from MongoDB.
+    /// </summary>
+    /// <param name="id">The unique identifier of the branch.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The branch if found, null otherwise.</returns>
+    public async Task<ExternalBranch?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(b => b.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves branches by their name from PostgreSQL.
     /// </summary>
     /// <param name="name">The name of the branch to search for.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -58,7 +76,17 @@ public class ExternalBranchRepository : IExternalBranchRepository
     }
 
     /// <summary>
-    /// Deletes a branch from the database.
+    /// Retrieves all branches from MongoDB.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of all branches.</returns>
+    public async Task<IEnumerable<ExternalBranch>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Deletes a branch from the database and MongoDB.
     /// </summary>
     /// <param name="id">The unique identifier of the branch to delete.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -71,11 +99,13 @@ public class ExternalBranchRepository : IExternalBranchRepository
 
         _context.ExternalBranches.Remove(branch);
         await _context.SaveChangesAsync(cancellationToken);
-        return true;
+
+        var deleteResult = await _mongoCollection.DeleteOneAsync(b => b.Id == id, cancellationToken);
+        return deleteResult.DeletedCount > 0;
     }
 
     /// <summary>
-    /// Updates an existing branch in the database.
+    /// Updates an existing branch in the database and MongoDB.
     /// </summary>
     /// <param name="branch">The branch to update.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -84,6 +114,9 @@ public class ExternalBranchRepository : IExternalBranchRepository
     {
         _context.ExternalBranches.Update(branch);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mongoCollection.ReplaceOneAsync(b => b.Id == branch.Id, branch, cancellationToken: cancellationToken);
+
         return branch;
     }
 }

@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
@@ -10,16 +11,20 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 public class ExternalCustomerRepository : IExternalCustomerRepository
 {
     private readonly DefaultContext _context;
+    private readonly IMongoCollection<ExternalCustomer> _mongoCollection;
 
-    public ExternalCustomerRepository(DefaultContext context)
+    public ExternalCustomerRepository(DefaultContext context, IMongoCollection<ExternalCustomer> mongoCollection)
     {
         _context = context;
+        _mongoCollection = mongoCollection;
     }
 
     public async Task<ExternalCustomer> CreateAsync(ExternalCustomer customer, CancellationToken cancellationToken = default)
     {
         await _context.ExternalCustomers.AddAsync(customer, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mongoCollection.InsertOneAsync(customer, cancellationToken: cancellationToken);
         return customer;
     }
 
@@ -43,13 +48,17 @@ public class ExternalCustomerRepository : IExternalCustomerRepository
 
         _context.ExternalCustomers.Remove(customer);
         await _context.SaveChangesAsync(cancellationToken);
-        return true;
+
+        var deleteResult = await _mongoCollection.DeleteOneAsync(c => c.Id == id, cancellationToken);
+        return deleteResult.DeletedCount > 0;
     }
 
     public async Task<ExternalCustomer> UpdateAsync(ExternalCustomer customer, CancellationToken cancellationToken = default)
     {
         _context.ExternalCustomers.Update(customer);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mongoCollection.ReplaceOneAsync(c => c.Id == customer.Id, customer, cancellationToken: cancellationToken);
         return customer;
     }
 }
