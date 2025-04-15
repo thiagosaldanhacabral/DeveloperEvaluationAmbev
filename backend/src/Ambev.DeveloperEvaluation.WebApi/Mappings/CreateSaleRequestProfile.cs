@@ -23,7 +23,7 @@ public class CreateSaleRequestProfile : Profile
 
         // Map from CreateSaleProductsRequest to SaleItem
         CreateMap<CreateSaleProductsRequest, SaleItem>()
-            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+            .ForPath(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
             .ForMember(dest => dest.Product.Id, opt => opt.MapFrom(src => src.ProductId))
             .ForMember(dest => dest.Product.ProductName, opt => opt.MapFrom(src => src.ProductName))
             .ForMember(dest => dest.Product.Price, opt => opt.MapFrom(src => src.Price))
