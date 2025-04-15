@@ -28,6 +28,10 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
             {
                 await HandleUnauthorizedAccessExceptionAsync(context);
             }
+            catch (KeyNotFoundException ex)
+            {
+                await HandleKeyNotFoundExceptionAsync(context, ex);
+            }
             catch (Exception ex)
             {
                 await HandleGenericExceptionAsync(context, ex);
@@ -97,6 +101,33 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
                 Success = false,
                 Message = "An unexpected error occurred. Please try again later.",
                 Errors = errorDetails
+            };
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
+        }
+
+        private static Task HandleKeyNotFoundExceptionAsync(HttpContext context, KeyNotFoundException exception)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+
+            var response = new ApiResponse
+            {
+                Success = false,
+                Message = "The requested resource was not found.",
+                Errors = new List<ValidationErrorDetail>
+                {
+                    new ValidationErrorDetail
+                    {
+                        Error = exception.Message,
+                        Detail = exception.StackTrace ?? string.Empty
+                    }
+                }
             };
 
             var jsonOptions = new JsonSerializerOptions
