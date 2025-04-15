@@ -1,4 +1,4 @@
-@Ambev.DeveloperEvaluation.WebApi_HostAddress = http://localhost:8080
+@Ambev.DeveloperEvaluation.WebApi_HostAddress = http://localhost:60378
 
 ### Authenticate User
 POST {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Auth
