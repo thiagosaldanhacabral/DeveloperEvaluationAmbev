@@ -52,4 +52,19 @@ public class ExternalProductRepository(DefaultContext context, IMongoCollection<
         await mongoCollection.ReplaceOneAsync(p => p.Id == product.Id, product, cancellationToken: cancellationToken);
         return product;
     }
+
+    public async Task<ExternalProduct?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(p => p.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExternalProduct>> GetByNameFromMongoAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(p => p.ProductName.Contains(name)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExternalProduct>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
+    }
 }

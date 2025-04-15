@@ -13,4 +13,8 @@ public interface ISaleItemRepository
     Task<IEnumerable<SaleItem>> GetByProductNameAsync(string productName, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<SaleItem> UpdateAsync(SaleItem saleItem, CancellationToken cancellationToken = default);
+    Task<SaleItem?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<SaleItem>> GetBySaleIdFromMongoAsync(Guid saleId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<SaleItem>> GetByProductNameFromMongoAsync(string productName, CancellationToken cancellationToken = default);
+    Task<IEnumerable<SaleItem>> GetAllFromMongoAsync(CancellationToken cancellationToken = default);
 }

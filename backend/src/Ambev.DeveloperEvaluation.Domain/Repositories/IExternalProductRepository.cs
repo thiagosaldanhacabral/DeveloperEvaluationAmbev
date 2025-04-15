@@ -12,5 +12,8 @@ public interface IExternalProductRepository
     Task<IEnumerable<ExternalProduct>> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ExternalProduct> UpdateAsync(ExternalProduct product, CancellationToken cancellationToken = default);
+    Task<ExternalProduct?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ExternalProduct>> GetByNameFromMongoAsync(string name, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ExternalProduct>> GetAllFromMongoAsync(CancellationToken cancellationToken = default);
 }
 

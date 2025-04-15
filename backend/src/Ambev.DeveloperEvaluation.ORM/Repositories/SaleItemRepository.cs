@@ -108,4 +108,24 @@ public class SaleItemRepository : ISaleItemRepository
         await _mongoCollection.ReplaceOneAsync(si => si.Id == saleItem.Id, saleItem, cancellationToken: cancellationToken);
         return saleItem;
     }
+
+    public async Task<SaleItem?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(si => si.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<SaleItem>> GetBySaleIdFromMongoAsync(Guid saleId, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(si => si.SaleId == saleId).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<SaleItem>> GetByProductNameFromMongoAsync(string productName, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(si => si.Product.ProductName.Contains(productName)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<SaleItem>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
+    }
 }

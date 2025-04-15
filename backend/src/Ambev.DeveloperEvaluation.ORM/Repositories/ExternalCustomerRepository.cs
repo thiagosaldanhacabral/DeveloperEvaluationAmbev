@@ -61,4 +61,19 @@ public class ExternalCustomerRepository : IExternalCustomerRepository
         await _mongoCollection.ReplaceOneAsync(c => c.Id == customer.Id, customer, cancellationToken: cancellationToken);
         return customer;
     }
+
+    public async Task<ExternalCustomer?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(c => c.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExternalCustomer>> GetByNameFromMongoAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(c => c.CustomerName.Contains(name)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExternalCustomer>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
+    }
 }

@@ -119,4 +119,9 @@ public class ExternalBranchRepository : IExternalBranchRepository
 
         return branch;
     }
+
+    public async Task<IEnumerable<ExternalBranch>> GetByNameFromMongoAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return await _mongoCollection.Find(b => b.BranchName.Contains(name)).ToListAsync(cancellationToken);
+    }
 }

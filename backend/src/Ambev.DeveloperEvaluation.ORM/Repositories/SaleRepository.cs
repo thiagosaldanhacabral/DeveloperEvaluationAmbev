@@ -53,4 +53,19 @@ public class SaleRepository(DefaultContext context, IMongoCollection<Sale> mongo
         await mongoCollection.ReplaceOneAsync(s => s.Id == sale.Id, sale, cancellationToken: cancellationToken);
         return sale;
     }
+
+    public async Task<Sale?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(s => s.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Sale>> GetByCustomerNameFromMongoAsync(string customerName, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(s => s.Customer.CustomerName.Contains(customerName)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Sale>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
+    }
 }
