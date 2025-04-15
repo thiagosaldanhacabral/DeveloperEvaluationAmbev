@@ -4,7 +4,6 @@ using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData;
 using Ambev.DeveloperEvaluation.Unit.Domain.Entities.TestData;
 using AutoMapper;
-using Bogus;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
