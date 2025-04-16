@@ -12,8 +12,6 @@ Accept: application/json
 
 ###
 
-@Ambev.DeveloperEvaluation.WebApi_HostAddress = https://localhost:8081
-
 ### Create Sale
 POST {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales
 Content-Type: application/json
