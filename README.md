@@ -1,50 +1,50 @@
 
 # DeveloperEvaluationAmbev
 
-Este projeto segue os princípios da **Clean Architecture**, com separação clara entre camadas de domínio, aplicação, infraestrutura e apresentação.
+This project follows the principles of **Clean Architecture**, with a clear separation between domain, application, infrastructure, and presentation layers.
 
-## 🧱 Estrutura do Projeto
+## 🧱 Project Structure
 
 ```
 backend/
 ├── Ambev.DeveloperEvaluation.sln
 ├── src/
-│   ├── Ambev.DeveloperEvaluation.Domain           # Entidades e interfaces de domínio
-│   ├── Ambev.DeveloperEvaluation.Application      # Casos de uso e lógica de aplicação
-│   ├── Ambev.DeveloperEvaluation.Common           # Utilitários e helpers comuns
-│   ├── Ambev.DeveloperEvaluation.ORM              # Persistência e repositórios (Entity Framework)
-│   ├── Ambev.DeveloperEvaluation.IoC              # Injeção de dependências
-│   └── Ambev.DeveloperEvaluation.WebApi           # API REST
+│   ├── Ambev.DeveloperEvaluation.Domain           # Entities and domain interfaces
+│   ├── Ambev.DeveloperEvaluation.Application      # Use cases and application logic
+│   ├── Ambev.DeveloperEvaluation.Common           # Common utilities and helpers
+│   ├── Ambev.DeveloperEvaluation.ORM              # Persistence and repositories (Entity Framework)
+│   ├── Ambev.DeveloperEvaluation.IoC              # Dependency Injection
+│   └── Ambev.DeveloperEvaluation.WebApi           # REST API
 ├── tests/
-│   ├── Ambev.DeveloperEvaluation.Unit             # Testes unitários
-│   ├── Ambev.DeveloperEvaluation.Integration      # Testes de integração
-│   └── Ambev.DeveloperEvaluation.Functional       # Testes funcionais
+│   ├── Ambev.DeveloperEvaluation.Unit             # Unit tests
+│   ├── Ambev.DeveloperEvaluation.Integration      # Integration tests
+│   └── Ambev.DeveloperEvaluation.Functional       # Functional tests
 ```
 
-## 🛠️ Executando o `update-database` via PowerShell
+## 🛠️ Running `update-database` via PowerShell
 
-Certifique-se de que o projeto de inicialização esteja definido como `Ambev.DeveloperEvaluation.WebApi`. Então, no terminal PowerShell, navegue até a pasta `backend` e execute:
+Make sure the startup project is set to `Ambev.DeveloperEvaluation.WebApi`. Then, open a PowerShell terminal, navigate to the `backend` folder and run:
 
 ```powershell
 cd .\backend
 dotnet ef database update --startup-project .\src\Ambev.DeveloperEvaluation.WebApi\ --project .\src\Ambev.DeveloperEvaluation.ORM\
 ```
 
-> 💡 Requer instalação do pacote `Microsoft.EntityFrameworkCore.Tools`
+> 💡 Requires the `Microsoft.EntityFrameworkCore.Tools` package to be installed.
 
-## 🐳 Executando com Docker Compose
+## 🐳 Running with Docker Compose
 
-Certifique-se de que o Docker esteja instalado e rodando. Para iniciar os serviços:
+Make sure Docker is installed and running. To start the services:
 
 ```powershell
 cd .\backend
 docker-compose up --build
 ```
 
-> Isso irá subir a infraestrutura necessária (ex: banco de dados, aplicação).
+> This will bring up the required infrastructure (e.g., database, application).
 
 ---
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob os termos do arquivo [LICENSE](../LICENSE).
+This project is licensed under the terms of the [LICENSE](../LICENSE) file.
