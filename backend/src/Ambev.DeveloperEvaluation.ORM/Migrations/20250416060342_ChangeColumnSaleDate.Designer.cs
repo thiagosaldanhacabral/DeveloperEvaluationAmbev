@@ -3,6 +3,7 @@ using System;
 using Ambev.DeveloperEvaluation.ORM;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ambev.DeveloperEvaluation.ORM.Migrations
 {
     [DbContext(typeof(DefaultContext))]
-    partial class DefaultContextModelSnapshot : ModelSnapshot
+    [Migration("20250416060342_ChangeColumnSaleDate")]
+    partial class ChangeColumnSaleDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,7 +38,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -46,7 +49,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("character varying(250)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.HasKey("Id");
 
@@ -61,7 +64,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
@@ -82,7 +85,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("character varying(15)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.HasKey("Id");
 
@@ -97,7 +100,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -111,7 +114,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("character varying(150)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.HasKey("Id");
 
@@ -129,7 +132,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
@@ -138,7 +141,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("SaleDate")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SaleNumber")
                         .IsRequired()
@@ -151,7 +154,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasDefaultValue(0m);
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.HasKey("Id");
 
@@ -170,7 +173,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.Property<decimal>("Discount")
                         .HasColumnType("decimal(18,2)");
@@ -193,7 +196,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasDefaultValue(0m);
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp");
 
                     b.HasKey("Id");
 
@@ -212,7 +215,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -240,7 +243,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
                         .IsRequired()
