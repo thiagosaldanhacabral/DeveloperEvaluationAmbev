@@ -49,39 +49,37 @@ Accept: application/json
 
 ###
 
-### Update Sale
-PUT {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales/{id}
-Content-Type: application/json
-Accept: application/json
-
-{
-  "saleNumber": "12345",
-  "saleDate": "2025-04-15T00:00:00Z",
-  "customer": {
-    "customerId": "CUST001",
-    "customerName": "John Doe",
-    "email": "johndoe@example.com",
-    "phone": "123-456-7890"
-  },
-  "branch": {
-    "branchId": "00000000-0000-0000-0000-000000000001",
-    "branchName": "Main Branch",
-    "location": "New York"
-  },
-  "products": [
-    {
-      "productId": "00000000-0000-0000-0000-000000000002",
-      "productName": "Product A",
-      "price": 100.50,
-      "quantity": 2
-    }
-  ]
-}
-
-###
-
 ### Delete Sale
 DELETE {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales/{id}
 Accept: application/json
 
 ###
+
+### Create User
+POST {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "newuser",
+  "password": "password123",
+  "phone": "(11) 98765-4321",
+  "email": "newuser@example.com",
+  "status": "Active",
+  "role": "Customer"
+}
+
+###
+
+### Get User by ID
+GET {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Users/{id}
+Accept: application/json
+
+###
+
+### Delete User
+DELETE {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Users/{id}
+Accept: application/json
+
+###
+
