@@ -11,24 +11,16 @@ namespace Ambev.DeveloperEvaluation.Application.Users.GetUser;
 /// <summary>
 /// Handler for processing GetUserCommand requests
 /// </summary>
-public class GetUserHandler : IRequestHandler<GetUserQuery, GetUserResult>
+public class GetUserHandler(
+    IUserRepository userRepository,
+    IUserQueryRepository userQueryRepository,
+    IMapper mapper,
+    IValidator<GetUserQuery> validator) : IRequestHandler<GetUserQuery, GetUserResult>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IMapper _mapper;
-    private readonly IUserQueryRepository _userQueryRepository;
-    private readonly IValidator<GetUserQuery> _validator;
-
-    public GetUserHandler(
-        IUserRepository userRepository,
-        IUserQueryRepository userQueryRepository,
-        IMapper mapper,
-        IValidator<GetUserQuery> validator)
-    {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _userQueryRepository = userQueryRepository ?? throw new ArgumentNullException(nameof(userQueryRepository));
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-    }
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+    private readonly IUserQueryRepository _userQueryRepository = userQueryRepository ?? throw new ArgumentNullException(nameof(userQueryRepository));
+    private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    private readonly IValidator<GetUserQuery> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
     public async Task<GetUserResult> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
