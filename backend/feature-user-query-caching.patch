@@ -1,0 +1,162 @@
+diff --git a/Ambev.DeveloperEvaluation.Application/Common/QueryParams.cs b/Ambev.DeveloperEvaluation.Application/Common/QueryParams.cs
+new file mode 100644
+--- /dev/null
++++ b/Ambev.DeveloperEvaluation.Application/Common/QueryParams.cs
+@@
++using System.Linq.Expressions;
++
++namespace Ambev.DeveloperEvaluation.Application.Common
++{
++    public class QueryParams<T>
++    {
++        public Expression<Func<T, bool>>? Filter { get; set; }
++        public int? Page { get; set; }
++        public int? PageSize { get; set; }
++        public Func<IQueryable<T>, IOrderedQueryable<T>>? OrderBy { get; set; }
++
++        public string CacheKey => GenerateCacheKey();
++
++        private string GenerateCacheKey()
++        {
++            var filterString = Filter?.ToString() ?? "nofilter";
++            var paging = $"page:{Page ?? 1},size:{PageSize ?? 10}";
++            var ordering = OrderBy?.Method.Name ?? "noorder";
++            return $"{typeof(T).Name}:{filterString}:{paging}:{ordering}".ToLowerInvariant();
++        }
++    }
++}
+diff --git a/Ambev.DeveloperEvaluation.Application/Users/GetUser/GetUserQueryHandler.cs b/Ambev.DeveloperEvaluation.Application/Users/GetUser/GetUserQueryHandler.cs
+--- a/Ambev.DeveloperEvaluation.Application/Users/GetUser/GetUserQueryHandler.cs
++++ b/Ambev.DeveloperEvaluation.Application/Users/GetUser/GetUserQueryHandler.cs
+@@
+ using MediatR;
+ using System.Collections.Generic;
+ using System.Threading;
+ using System.Threading.Tasks;
++using Ambev.DeveloperEvaluation.Domain.Entities;
++using Ambev.DeveloperEvaluation.Application.Common;
++using Ambev.DeveloperEvaluation.Domain.Interfaces.Repositories;
+
+ namespace Ambev.DeveloperEvaluation.Application.Users.GetUser
+ {
+     public class GetUserQueryHandler : IRequestHandler<GetUserQuery, IEnumerable<User>>
+     {
+-        public Task<IEnumerable<User>> Handle(GetUserQuery request, CancellationToken cancellationToken)
+-        {
+-            // lógica atual aqui
+-        }
++        private readonly IUserQueryRepository _repository;
++
++        public GetUserQueryHandler(IUserQueryRepository repository)
++        {
++            _repository = repository;
++        }
++
++        public async Task<IEnumerable<User>> Handle(GetUserQuery request, CancellationToken cancellationToken)
++        {
++            var parameters = new QueryParams<User>
++            {
++                Filter = u => string.IsNullOrEmpty(request.NameContains) || u.Name.Contains(request.NameContains),
++                Page = request.Page,
++                PageSize = request.PageSize,
++                OrderBy = q => q.OrderBy(u => u.Name)
++            };
++
++            return await _repository.QueryAsync(parameters, cancellationToken);
++        }
+     }
+ }
+diff --git a/Ambev.DeveloperEvaluation.Domain/Interfaces/Repositories/IUserQueryRepository.cs b/Ambev.DeveloperEvaluation.Domain/Interfaces/Repositories/IUserQueryRepository.cs
+new file mode 100644
+--- /dev/null
++++ b/Ambev.DeveloperEvaluation.Domain/Interfaces/Repositories/IUserQueryRepository.cs
+@@
++using Ambev.DeveloperEvaluation.Application.Common;
++using Ambev.DeveloperEvaluation.Domain.Entities;
++
++namespace Ambev.DeveloperEvaluation.Domain.Interfaces.Repositories
++{
++    public interface IUserQueryRepository
++    {
++        Task<IEnumerable<User>> QueryAsync(QueryParams<User> parameters, CancellationToken cancellationToken = default);
++    }
++}
+diff --git a/Ambev.DeveloperEvaluation.ORM/Repositories/Base/CacheableQueryRepository.cs b/Ambev.DeveloperEvaluation.ORM/Repositories/Base/CacheableQueryRepository.cs
+new file mode 100644
+--- /dev/null
++++ b/Ambev.DeveloperEvaluation.ORM/Repositories/Base/CacheableQueryRepository.cs
+@@
++using Ambev.DeveloperEvaluation.Application.Common;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.Extensions.Caching.Distributed;
++using System.Text.Json;
++
++namespace Ambev.DeveloperEvaluation.ORM.Repositories.Base
++{
++    public abstract class CacheableQueryRepository<T> where T : class
++    {
++        private readonly DbContext _context;
++        private readonly IDistributedCache _cache;
++        protected readonly DbSet<T> _dbSet;
++
++        protected CacheableQueryRepository(DbContext context, IDistributedCache cache)
++        {
++            _context = context;
++            _cache = cache;
++            _dbSet = context.Set<T>();
++        }
++
++        public async Task<IEnumerable<T>> QueryAsync(QueryParams<T> parameters, CancellationToken cancellationToken = default)
++        {
++            var cacheKey = parameters.CacheKey;
++
++            var cached = await _cache.GetStringAsync(cacheKey, cancellationToken);
++            if (!string.IsNullOrWhiteSpace(cached))
++                return JsonSerializer.Deserialize<List<T>>(cached)!;
++
++            IQueryable<T> query = _dbSet;
++
++            if (parameters.Filter != null)
++                query = query.Where(parameters.Filter);
++
++            if (parameters.OrderBy != null)
++                query = parameters.OrderBy(query);
++
++            if (parameters.Page.HasValue && parameters.PageSize.HasValue)
++            {
++                query = query
++                    .Skip((parameters.Page.Value - 1) * parameters.PageSize.Value)
++                    .Take(parameters.PageSize.Value);
++            }
++
++            var result = await query.ToListAsync(cancellationToken);
++
++            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result), new DistributedCacheEntryOptions
++            {
++                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
++            }, cancellationToken);
++
++            return result;
++        }
++    }
++}
+diff --git a/Ambev.DeveloperEvaluation.ORM/Repositories/UserQueryRepository.cs b/Ambev.DeveloperEvaluation.ORM/Repositories/UserQueryRepository.cs
+new file mode 100644
+--- /dev/null
++++ b/Ambev.DeveloperEvaluation.ORM/Repositories/UserQueryRepository.cs
+@@
++using Ambev.DeveloperEvaluation.Application.Common;
++using Ambev.DeveloperEvaluation.Domain.Entities;
++using Ambev.DeveloperEvaluation.Domain.Interfaces.Repositories;
++using Ambev.DeveloperEvaluation.ORM.Contexts;
++using Ambev.DeveloperEvaluation.ORM.Repositories.Base;
++using Microsoft.Extensions.Caching.Distributed;
++
++namespace Ambev.DeveloperEvaluation.ORM.Repositories
++{
++    public class UserQueryRepository : CacheableQueryRepository<User>, IUserQueryRepository
++    {
++        public UserQueryRepository(DefaultContext context, IDistributedCache cache)
++            : base(context, cache) { }
++    }
++}

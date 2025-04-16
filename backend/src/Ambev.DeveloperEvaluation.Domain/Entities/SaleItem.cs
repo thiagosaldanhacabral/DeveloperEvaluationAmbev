@@ -114,8 +114,7 @@ public class SaleItem : BaseEntity
     {
         if (quantity < 4) return 0m;
         if (quantity >= 4 && quantity < 10) return 0.1m;
-        if (quantity >= 10 && quantity <= 20) return 0.2m;
-        throw new InvalidOperationException("Cannot sell more than 20 identical items.");
+        return quantity >= 10 && quantity <= 20 ? 0.2m : throw new InvalidOperationException("Cannot sell more than 20 identical items.");
     }
     /// <summary>
     /// Calculates the total amount based on quantity and value.
