@@ -11,8 +11,12 @@ using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
 using FluentValidation;
 using MediatR;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Bson.Serialization;
 
 namespace Ambev.DeveloperEvaluation.WebApi;
 
@@ -62,21 +66,26 @@ public static class Program
                 options.InstanceName = "AmbevCache_";
             });
 
+            var connectionStringMongo = builder.Configuration.GetConnectionString("MongoDbConnection");
+            if (string.IsNullOrEmpty(connectionStringMongo))
+            {
+                throw new InvalidOperationException("MongoDbConnection string is not configured.");
+            }
+
+            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+            builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(connectionStringMongo));
+
             builder.Services.AddSingleton(sp =>
             {
-                var connectionString = builder.Configuration.GetConnectionString("MongoDbConnection");
-                if (string.IsNullOrEmpty(connectionString))
-                {
-                    throw new InvalidOperationException("MongoDbConnection string is not configured.");
-                }
+                var mongoUrl = new MongoUrl(connectionStringMongo);
+                var databaseName = mongoUrl.DatabaseName;
 
-                var databaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
                 if (string.IsNullOrEmpty(databaseName))
                 {
-                    throw new InvalidOperationException("MongoDbSettings:DatabaseName is not configured.");
+                    throw new InvalidOperationException("Database name is not specified in the MongoDbConnection string.");
                 }
 
-                return new MongoDbContext(connectionString, databaseName);
+                return new MongoDbContext(connectionStringMongo, databaseName);
             });
 
             builder.Services.AddScoped(sp =>
