@@ -47,5 +47,20 @@ namespace Ambev.DeveloperEvaluation.Application.Commom
 
             return result;
         }
+
+        protected async Task SetCacheAsync<TValue>(string cacheKey, TValue value, CancellationToken cancellationToken = default)
+        {
+            if (EqualityComparer<TValue>.Default.Equals(value, default))
+                throw new ArgumentNullException(nameof(value));
+
+            var serializedValue = JsonSerializer.Serialize(value);
+
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1) // Cache expires in 1 day
+            };
+
+            await _cache.SetStringAsync(cacheKey, serializedValue, cacheOptions, cancellationToken);
+        }
     }
 }

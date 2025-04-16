@@ -21,5 +21,7 @@ public class ApplicationModuleInitializer : IModuleInitializer
         builder.Services.AddScoped<IExternalBranchRepository, ExternalBranchRepository>();
         builder.Services.AddScoped<IUserQueryRepository, UserQueryRepository>();
         builder.Services.AddScoped<ISaleQueryRepository, SaleQueryRepository>();
+        builder.Services.AddScoped<IUserCreateRepository, UserCreateRepository>();
+        builder.Services.AddScoped<ISaleCreateRepository, SaleCreateRepository>();
     }
 }
