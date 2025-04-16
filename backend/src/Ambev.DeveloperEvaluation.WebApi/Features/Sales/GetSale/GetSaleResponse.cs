@@ -12,4 +12,4 @@ public abstract record GetSaleResponse(
     ExternalCustomer Customer,
     ExternalBranch Branch,
     decimal TotalAmount,
-    List<Domain.Entities.SaleItem> Products);
+    List<SaleItem> Products);

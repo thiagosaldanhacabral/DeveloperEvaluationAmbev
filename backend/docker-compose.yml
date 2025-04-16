@@ -32,7 +32,7 @@ services:
 
   ambev.developerevaluation.nosql:
     container_name: ambev_developer_evaluation_nosql 
-    image: mongo:8.0
+    image: mongo:latest
     restart: always
     environment:
         MONGO_INITDB_ROOT_USERNAME: developer

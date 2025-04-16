@@ -1,11 +1,15 @@
 using Ambev.DeveloperEvaluation.Application;
+using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
+using Ambev.DeveloperEvaluation.Application.Users.GetUser;
 using Ambev.DeveloperEvaluation.Common.HealthChecks;
 using Ambev.DeveloperEvaluation.Common.Logging;
 using Ambev.DeveloperEvaluation.Common.Security;
 using Ambev.DeveloperEvaluation.Common.Validation;
+using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.IoC;
 using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -58,6 +62,54 @@ public static class Program
                 options.InstanceName = "AmbevCache_";
             });
 
+            builder.Services.AddSingleton(sp =>
+            {
+                var connectionString = builder.Configuration.GetConnectionString("MongoDbConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("MongoDbConnection string is not configured.");
+                }
+
+                var databaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
+                if (string.IsNullOrEmpty(databaseName))
+                {
+                    throw new InvalidOperationException("MongoDbSettings:DatabaseName is not configured.");
+                }
+
+                return new MongoDbContext(connectionString, databaseName);
+            });
+
+            builder.Services.AddScoped(sp =>
+            {
+                var mongoDbContext = sp.GetRequiredService<MongoDbContext>();
+                return mongoDbContext.GetCollection<Sale>("Sales");
+            });
+
+            builder.Services.AddScoped(sp =>
+            {
+                var mongoDbContext = sp.GetRequiredService<MongoDbContext>();
+                return mongoDbContext.GetCollection<ExternalCustomer>("ExternalCustomers");
+            });
+
+            builder.Services.AddScoped(sp =>
+            {
+                var mongoDbContext = sp.GetRequiredService<MongoDbContext>();
+                return mongoDbContext.GetCollection<User>("Users");
+            });
+
+            builder.Services.AddScoped(sp =>
+            {
+                var mongoDbContext = sp.GetRequiredService<MongoDbContext>();
+                return mongoDbContext.GetCollection<ExternalProduct>("ExternalProducts");
+            });
+
+            builder.Services.AddScoped(sp =>
+            {
+                var mongoDbContext = sp.GetRequiredService<MongoDbContext>();
+                return mongoDbContext.GetCollection<ExternalBranch>("ExternalBranches");
+            });
+
+            builder.Services.AddValidatorsFromAssembly(typeof(GetUserQuery).Assembly);
 
             var app = builder.Build();
             app.UseMiddleware<ValidationExceptionMiddleware>();

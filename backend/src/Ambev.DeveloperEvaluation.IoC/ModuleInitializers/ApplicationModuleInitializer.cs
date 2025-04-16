@@ -1,4 +1,7 @@
-﻿using Ambev.DeveloperEvaluation.Common.Security;
+﻿using Ambev.DeveloperEvaluation.Application.Interfaces;
+using Ambev.DeveloperEvaluation.Application.Sales;
+using Ambev.DeveloperEvaluation.Application.Users;
+using Ambev.DeveloperEvaluation.Common.Security;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.ORM.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -16,6 +19,7 @@ public class ApplicationModuleInitializer : IModuleInitializer
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IExternalProductRepository, ExternalProductRepository>();
         builder.Services.AddScoped<IExternalBranchRepository, ExternalBranchRepository>();
-
+        builder.Services.AddScoped<IUserQueryRepository, UserQueryRepository>();
+        builder.Services.AddScoped<ISaleQueryRepository, SaleQueryRepository>();
     }
 }
