@@ -1,44 +1,24 @@
-using FluentValidation;
-using Ambev.DeveloperEvaluation.Domain.Entities;
-using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using MediatR;
+using FluentValidation;
+using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Application.Interfaces;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
 /// <summary>
 /// Handler for processing CreateSaleCommand requests
 /// </summary>
-public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleResult>
+public class CreateSaleHandler(
+    ISaleRepository saleRepository,
+    IMapper mapper,
+    IExternalProductRepository productRepository,
+    IExternalCustomerRepository customerRepository,
+    IExternalBranchRepository branchRepository,
+    ISaleCreateRepository saleCreateRepository
+) : IRequestHandler<CreateSaleCommand, CreateSaleResult>
 {
-    private readonly ISaleRepository _saleRepository;
-    private readonly IMapper _mapper;
-    private readonly IExternalProductRepository _productRepository;
-    private readonly IExternalCustomerRepository _customerRepository;
-    private readonly IExternalBranchRepository _branchRepository;
-
-    /// <summary>
-    /// Initializes a new instance of CreateSaleHandler
-    /// </summary>
-    /// <param name="saleRepository">The sale repository</param>
-    /// <param name="mapper">The AutoMapper instance</param>
-    /// <param name="productRepository">The product repository</param>
-    /// <param name="customerRepository">The customer repository</param>
-    /// <param name="branchRepository">The branch repository</param>
-    public CreateSaleHandler(
-        ISaleRepository saleRepository,
-        IMapper mapper,
-        IExternalProductRepository productRepository,
-        IExternalCustomerRepository customerRepository,
-        IExternalBranchRepository branchRepository)
-    {
-        _saleRepository = saleRepository;
-        _mapper = mapper;
-        _productRepository = productRepository;
-        _customerRepository = customerRepository;
-        _branchRepository = branchRepository;
-    }
-
     /// <summary>
     /// Handles the CreateSaleCommand request
     /// </summary>
@@ -54,50 +34,45 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
 
-        var customer = command.Customer;
-        var branch = command.Branch;
+        // Handle customer creation or retrieval
+        var customer = command.Customer.Id == Guid.Empty
+            ? await customerRepository.CreateAsync(command.Customer, cancellationToken)
+            : await customerRepository.GetByIdAsync(command.Customer.Id, cancellationToken);
 
-        if (customer.Id.ToString() == Guid.Empty.ToString())
-        {
-            customer = await _customerRepository.CreateAsync(customer, cancellationToken);
-        }
-        else
-        {
-            customer = await _customerRepository.GetByIdAsync(customer.Id, cancellationToken);
-        }
+        // Handle branch creation or retrieval
+        var branch = command.Branch.Id == Guid.Empty
+            ? await branchRepository.CreateAsync(command.Branch, cancellationToken)
+            : await branchRepository.GetByIdAsync(command.Branch.Id, cancellationToken);
 
-        if (branch.Id.ToString() == Guid.Empty.ToString())
-        {
-            branch = await _branchRepository.CreateAsync(branch, cancellationToken);
-        }
-        else
-        {
-            branch = await _branchRepository.GetByIdAsync(command.Branch.Id, cancellationToken);
-        }
+        // Create the sale
+        var sale = new Sale(customer?.Id ?? Guid.NewGuid(), branch?.Id ?? Guid.NewGuid(), command.SaleNumber, command.SaleDate, customer, branch);
 
-        var sale = new Sale(customer?.Id?? Guid.NewGuid(), branch?.Id?? Guid.NewGuid(), command.SaleNumber, command.SaleDate, customer, branch);
-
+        // Add sale items
         foreach (var item in command.SaleItems)
         {
-            var product = item.Product;
-            if (product.Id.ToString() == Guid.Empty.ToString())
-            {
-                product = await _productRepository.CreateAsync(product, cancellationToken);
-            }
-            else
-            {
-                product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-            }
+            var product = item.Product.Id == Guid.Empty
+                ? await productRepository.CreateAsync(item.Product, cancellationToken)
+                : await productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+
+            if (product == null)
+                throw new InvalidOperationException($"Product with ID {item.ProductId} could not be found or created.");
 
             var saleItem = new SaleItem(Guid.Empty, item.Quantity, product);
             sale.AddItem(saleItem);
         }
+
+        // Recalculate total amount and save the sale
         sale.RecalculateTotalAmount();
-        var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
+        var createdSale = await saleRepository.CreateAsync(sale, cancellationToken);
 
-        await _saleRepository.UpdateAsync(createdSale, cancellationToken);
+        // Update the sale in the repository
+        await saleRepository.UpdateAsync(createdSale, cancellationToken);
 
-        var result = _mapper.Map<CreateSaleResult>(createdSale);
-        return result;
+        // Store the sale in the cache
+        var cacheKey = $"Sale:{createdSale.Id}";
+        await saleCreateRepository.StoreSaleInCacheAsync(createdSale, cacheKey, cancellationToken);
+
+        // Map and return the result
+        return mapper.Map<CreateSaleResult>(createdSale);
     }
 }

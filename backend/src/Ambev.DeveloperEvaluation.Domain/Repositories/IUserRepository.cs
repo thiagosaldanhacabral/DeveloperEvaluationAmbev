@@ -38,4 +38,8 @@ public interface IUserRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the user was deleted, false if not found</returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<User?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<User?> GetByEmailFromMongoAsync(string email, CancellationToken cancellationToken = default);
+    Task<IEnumerable<User>> GetAllFromMongoAsync(CancellationToken cancellationToken = default);
 }

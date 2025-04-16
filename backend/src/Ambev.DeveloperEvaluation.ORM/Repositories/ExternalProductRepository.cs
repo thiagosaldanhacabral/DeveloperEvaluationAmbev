@@ -1,18 +1,21 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
 /// <summary>
 /// Implementation of IExternalProductRepository using Entity Framework Core.
 /// </summary>
-public class ExternalProductRepository(DefaultContext context) : IExternalProductRepository
+public class ExternalProductRepository(DefaultContext context, IMongoCollection<ExternalProduct> mongoCollection) : IExternalProductRepository
 {
     public async Task<ExternalProduct> CreateAsync(ExternalProduct product, CancellationToken cancellationToken = default)
     {
         await context.ExternalProducts.AddAsync(product, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        await mongoCollection.InsertOneAsync(product, cancellationToken: cancellationToken);
         return product;
     }
 
@@ -36,13 +39,32 @@ public class ExternalProductRepository(DefaultContext context) : IExternalProduc
 
         context.ExternalProducts.Remove(product);
         await context.SaveChangesAsync(cancellationToken);
-        return true;
+
+        var deleteResult = await mongoCollection.DeleteOneAsync(p => p.Id == id, cancellationToken);
+        return deleteResult.DeletedCount > 0;
     }
 
     public async Task<ExternalProduct> UpdateAsync(ExternalProduct product, CancellationToken cancellationToken = default)
     {
         context.ExternalProducts.Update(product);
         await context.SaveChangesAsync(cancellationToken);
+
+        await mongoCollection.ReplaceOneAsync(p => p.Id == product.Id, product, cancellationToken: cancellationToken);
         return product;
+    }
+
+    public async Task<ExternalProduct?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(p => p.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExternalProduct>> GetByNameFromMongoAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(p => p.ProductName.Contains(name)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExternalProduct>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
     }
 }

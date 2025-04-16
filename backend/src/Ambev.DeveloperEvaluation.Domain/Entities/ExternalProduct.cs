@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Validation;
@@ -24,6 +20,11 @@ public class ExternalProduct : BaseEntity
     /// </summary>
     public decimal Price { get; private set; }
 
+    public ExternalProduct()
+    {
+
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ExternalProduct"/> class.
     /// </summary>
@@ -34,12 +35,12 @@ public class ExternalProduct : BaseEntity
         CreatedAt = DateTime.UtcNow;
         IsActive = true;
     }
-    
+
     /// <summary>
     /// Gets a value indicating whether the item has been active.
     /// </summary>
     public bool IsActive { get; private set; }
-    
+
     /// <summary>
     /// Performs validation of the external product entity using the ExternalProductValidator rules.
     /// </summary>
@@ -64,7 +65,7 @@ public class ExternalProduct : BaseEntity
             Errors = result.Errors.Select(o => (ValidationErrorDetail)o)
         };
     }
-    
+
     /// <summary>
     /// Inactive the product.
     /// </summary>
@@ -73,7 +74,7 @@ public class ExternalProduct : BaseEntity
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     /// <summary>
     /// Active the product.
     /// </summary>

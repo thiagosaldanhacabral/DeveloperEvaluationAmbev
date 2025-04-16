@@ -1,18 +1,21 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
 /// <summary>
 /// Implementation of ISaleRepository using Entity Framework Core.
 /// </summary>
-public class SaleRepository(DefaultContext context) : ISaleRepository
+public class SaleRepository(DefaultContext context, IMongoCollection<Sale> mongoCollection) : ISaleRepository
 {
     public async Task<Sale> CreateAsync(Sale sale, CancellationToken cancellationToken = default)
     {
         await context.Sales.AddAsync(sale, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        await mongoCollection.InsertOneAsync(sale, cancellationToken: cancellationToken);
         return sale;
     }
 
@@ -37,13 +40,32 @@ public class SaleRepository(DefaultContext context) : ISaleRepository
 
         context.Sales.Remove(sale);
         await context.SaveChangesAsync(cancellationToken);
-        return true;
+
+        var deleteResult = await mongoCollection.DeleteOneAsync(s => s.Id == id, cancellationToken);
+        return deleteResult.DeletedCount > 0;
     }
 
     public async Task<Sale> UpdateAsync(Sale sale, CancellationToken cancellationToken = default)
     {
         context.Sales.Update(sale);
         await context.SaveChangesAsync(cancellationToken);
+
+        await mongoCollection.ReplaceOneAsync(s => s.Id == sale.Id, sale, cancellationToken: cancellationToken);
         return sale;
+    }
+
+    public async Task<Sale?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(s => s.Id == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Sale>> GetByCustomerNameFromMongoAsync(string customerName, CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(s => s.Customer.CustomerName.Contains(customerName)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Sale>> GetAllFromMongoAsync(CancellationToken cancellationToken = default)
+    {
+        return await mongoCollection.Find(_ => true).ToListAsync(cancellationToken);
     }
 }

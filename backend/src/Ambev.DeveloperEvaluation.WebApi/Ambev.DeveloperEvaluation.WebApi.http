@@ -1,6 +1,87 @@
-@Ambev.DeveloperEvaluation.WebApi_HostAddress = http://localhost:5119
+@Ambev.DeveloperEvaluation.WebApi_HostAddress = https://localhost:8081
 
-GET {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/weatherforecast/
+### Authenticate User
+POST {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Auth
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "test@test.com",
+  "password": "password123"
+}
+
+###
+
+### Create Sale
+POST {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales
+Content-Type: application/json
+Accept: application/json
+
+{
+  "saleNumber": "12345",
+  "saleDate": "2025-04-15T00:00:00Z",
+  "customer": {
+    "customerId": "CUST001",
+    "customerName": "John Doe",
+    "email": "johndoe@example.com",
+    "phone": "123-456-7890"
+  },
+  "branch": {
+    "branchId": "00000000-0000-0000-0000-000000000001",
+    "branchName": "Main Branch",
+    "location": "New York"
+  },
+  "products": [
+    {
+      "productId": "00000000-0000-0000-0000-000000000002",
+      "productName": "Product A",
+      "price": 100.50,
+      "quantity": 2
+    }
+  ]
+}
+
+###
+
+### Get Sale by ID
+GET {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales/{id}
+Accept: application/json
+
+###
+
+### Update Sale
+PUT {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales/{id}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "saleNumber": "12345",
+  "saleDate": "2025-04-15T00:00:00Z",
+  "customer": {
+    "customerId": "CUST001",
+    "customerName": "John Doe",
+    "email": "johndoe@example.com",
+    "phone": "123-456-7890"
+  },
+  "branch": {
+    "branchId": "00000000-0000-0000-0000-000000000001",
+    "branchName": "Main Branch",
+    "location": "New York"
+  },
+  "products": [
+    {
+      "productId": "00000000-0000-0000-0000-000000000002",
+      "productName": "Product A",
+      "price": 100.50,
+      "quantity": 2
+    }
+  ]
+}
+
+###
+
+### Delete Sale
+DELETE {{Ambev.DeveloperEvaluation.WebApi_HostAddress}}/api/Sales/{id}
 Accept: application/json
 
 ###

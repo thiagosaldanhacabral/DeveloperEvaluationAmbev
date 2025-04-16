@@ -12,4 +12,7 @@ public interface IExternalBranchRepository
     Task<IEnumerable<ExternalBranch>> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ExternalBranch> UpdateAsync(ExternalBranch branch, CancellationToken cancellationToken = default);
+    Task<ExternalBranch?> GetByIdFromMongoAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ExternalBranch>> GetByNameFromMongoAsync(string name, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ExternalBranch>> GetAllFromMongoAsync(CancellationToken cancellationToken = default);
 }

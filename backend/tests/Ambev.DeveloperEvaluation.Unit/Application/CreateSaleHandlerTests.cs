@@ -1,10 +1,10 @@
+using Ambev.DeveloperEvaluation.Application.Interfaces;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData;
 using Ambev.DeveloperEvaluation.Unit.Domain.Entities.TestData;
 using AutoMapper;
-using Bogus;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
@@ -34,7 +34,11 @@ public class CreateSaleHandlerTests
         _customerRepository = Substitute.For<IExternalCustomerRepository>();
         _branchRepository = Substitute.For<IExternalBranchRepository>();
         _mapper = Substitute.For<IMapper>();
-        _handler = new CreateSaleHandler(_saleRepository, _mapper, _productRepository, _customerRepository, _branchRepository);
+
+        // Add a mock for ISaleCreateRepository
+        var saleCreateRepository = Substitute.For<ISaleCreateRepository>();
+
+        _handler = new CreateSaleHandler(_saleRepository, _mapper, _productRepository, _customerRepository, _branchRepository, saleCreateRepository);
     }
 
     /// <summary>
@@ -48,9 +52,9 @@ public class CreateSaleHandlerTests
         var customer = ExternalCustomerTestData.GenerateValidExternalCustomer();
         var branch = ExternalBranchTestData.GenerateValidExternalBranch();
         var product = ExternalProductTestData.GenerateValidExternalProduct();
-        var sale = new Sale(customer.Id, branch.Id, command.SaleNumber, DateTime.Now, customer, branch); 
+        var sale = new Sale(customer.Id, branch.Id, command.SaleNumber, DateTime.Now, customer, branch);
         var result = new CreateSaleResult(sale.Id);
-        
+
         _productRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(product);
         _customerRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(customer);
         _branchRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(branch);
@@ -108,7 +112,7 @@ public class CreateSaleHandlerTests
         {
             item.Product.Id = Guid.Empty;
         }
-        
+
         _customerRepository.CreateAsync(Arg.Any<ExternalCustomer>(), Arg.Any<CancellationToken>()).Returns(customer);
         _branchRepository.CreateAsync(Arg.Any<ExternalBranch>(), Arg.Any<CancellationToken>()).Returns(branch);
         _productRepository.CreateAsync(Arg.Any<ExternalProduct>(), Arg.Any<CancellationToken>()).Returns(product);
@@ -132,7 +136,7 @@ public class CreateSaleHandlerTests
         var customer = ExternalCustomerTestData.GenerateValidExternalCustomer();
         var branch = ExternalBranchTestData.GenerateValidExternalBranch();
         var product = ExternalProductTestData.GenerateValidExternalProduct();
-        var sale = new Sale(customer.Id, branch.Id, command.SaleNumber, DateTime.Now, customer, branch); 
+        var sale = new Sale(customer.Id, branch.Id, command.SaleNumber, DateTime.Now, customer, branch);
         _customerRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(customer);
         _branchRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(branch);
         _saleRepository.CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>()).Returns(sale);

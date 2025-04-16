@@ -83,7 +83,7 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
-            var command = _mapper.Map<GetSaleCommand>(request);
+            var command = _mapper.Map<GetSaleQuery>(request);
             var response = await _mediator.Send(command, cancellationToken);
 
             return Ok(new ApiResponseWithData<GetSaleResponse>

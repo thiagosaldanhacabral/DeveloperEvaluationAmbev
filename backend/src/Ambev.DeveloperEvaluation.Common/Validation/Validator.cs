@@ -15,11 +15,6 @@ public static class Validator
 
         var result = await validator.ValidateAsync(new ValidationContext<T>(instance));
 
-        if (!result.IsValid)
-        {
-            return result.Errors.Select(o => (ValidationErrorDetail)o);
-        }
-
-        return [];
+        return !result.IsValid ? result.Errors.Select(o => (ValidationErrorDetail)o) : [];
     }
 }

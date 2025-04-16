@@ -24,6 +24,18 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
             {
                 await HandleValidationExceptionAsync(context, ex);
             }
+            catch (UnauthorizedAccessException)
+            {
+                await HandleUnauthorizedAccessExceptionAsync(context);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                await HandleKeyNotFoundExceptionAsync(context, ex);
+            }
+            catch (Exception ex)
+            {
+                await HandleGenericExceptionAsync(context, ex);
+            }
         }
 
         private static Task HandleValidationExceptionAsync(HttpContext context, ValidationException exception)
@@ -37,6 +49,85 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
                 Message = "Validation Failed",
                 Errors = exception.Errors
                     .Select(error => (ValidationErrorDetail)error)
+            };
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
+        }
+
+        private static Task HandleUnauthorizedAccessExceptionAsync(HttpContext context)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+            var response = new ApiResponse
+            {
+                Success = false,
+                Message = "Unauthorized access. Please check your credentials or permissions."
+            };
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
+        }
+
+        private static Task HandleGenericExceptionAsync(HttpContext context, Exception exception)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+            var errorDetails = new List<ValidationErrorDetail>();
+            var currentException = exception;
+
+            while (currentException != null)
+            {
+                errorDetails.Add(new ValidationErrorDetail
+                {
+                    Error = currentException.Message,
+                    Detail = currentException.StackTrace ?? string.Empty
+                });
+                currentException = currentException.InnerException;
+            }
+
+            var response = new ApiResponse
+            {
+                Success = false,
+                Message = "An unexpected error occurred. Please try again later.",
+                Errors = errorDetails
+            };
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
+        }
+
+        private static Task HandleKeyNotFoundExceptionAsync(HttpContext context, KeyNotFoundException exception)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+
+            var response = new ApiResponse
+            {
+                Success = false,
+                Message = "The requested resource was not found.",
+                Errors = new List<ValidationErrorDetail>
+                {
+                    new ValidationErrorDetail
+                    {
+                        Error = exception.Message,
+                        Detail = exception.StackTrace ?? string.Empty
+                    }
+                }
             };
 
             var jsonOptions = new JsonSerializerOptions

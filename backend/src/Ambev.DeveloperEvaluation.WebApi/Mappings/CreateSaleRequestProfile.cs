@@ -23,13 +23,14 @@ public class CreateSaleRequestProfile : Profile
 
         // Map from CreateSaleProductsRequest to SaleItem
         CreateMap<CreateSaleProductsRequest, SaleItem>()
-            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
-            .ForMember(dest => dest.Product.Id, opt => opt.MapFrom(src => src.ProductId))
-            .ForMember(dest => dest.Product.ProductName, opt => opt.MapFrom(src => src.ProductName))
-            .ForMember(dest => dest.Product.Price, opt => opt.MapFrom(src => src.Price))
-            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
-            .ForMember(dest => dest.Discount, opt => opt.Ignore()) // Calculated in business logic
-            .ForMember(dest => dest.TotalAmount, opt => opt.Ignore()); // Calculated in business logic
+             .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+             .ForPath(dest => dest.Product.Id, opt => opt.MapFrom(src => src.ProductId))
+             .ForPath(dest => dest.Product.ProductName, opt => opt.MapFrom(src => src.ProductName))
+             .ForPath(dest => dest.Product.Price, opt => opt.MapFrom(src => src.Price))
+             .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+             .ForMember(dest => dest.Discount, opt => opt.Ignore()) // Calculated in business logic
+             .ForMember(dest => dest.TotalAmount, opt => opt.Ignore()); // Calculated in business logic
+
 
         // Map from CreateSaleCustomerRequest to ExternalCustomer
         CreateMap<CreateSaleCustomerRequest, ExternalCustomer>()

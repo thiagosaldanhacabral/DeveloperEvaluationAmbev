@@ -1,5 +1,3 @@
-using Ambev.DeveloperEvaluation.Domain;
-
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 
 /// <summary>
@@ -33,7 +31,7 @@ public class CreateSaleRequest
     public List<CreateSaleProductsRequest>? Products { get; set; } 
 }
 
-public abstract class CreateSaleProductsRequest
+public class CreateSaleProductsRequest
 {
     /// <summary>
     /// Gets the id of the product.
@@ -55,7 +53,7 @@ public abstract class CreateSaleProductsRequest
     public int? Quantity { get; set; }
 }
 
-public abstract class CreateSaleCustomerRequest
+public class CreateSaleCustomerRequest
 {
     // <summary>
     /// Gets the id of the customer.
