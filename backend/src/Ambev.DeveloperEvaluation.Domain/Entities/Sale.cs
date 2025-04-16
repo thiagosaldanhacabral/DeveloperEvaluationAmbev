@@ -22,7 +22,7 @@ public class Sale : BaseEntity
         CustomerId = customerId;
         BranchId = branchId;
         SaleNumber = saleNumber;
-        SaleDate = saleDate;
+        SaleDate = DateTime.SpecifyKind(saleDate, DateTimeKind.Unspecified);
         Customer = customer;
         Branch = branch;
         CreatedAt = DateTime.UtcNow;
