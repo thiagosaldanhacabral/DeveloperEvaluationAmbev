@@ -52,6 +52,13 @@ public static class Program
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+                options.InstanceName = "AmbevCache_";
+            });
+
+
             var app = builder.Build();
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
