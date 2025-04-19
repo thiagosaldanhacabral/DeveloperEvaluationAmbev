@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Ambev.DeveloperEvaluation.Application.Commom
 {
@@ -14,6 +15,13 @@ namespace Ambev.DeveloperEvaluation.Application.Commom
             _cache = cache;
             _dbSet = context.Set<T>();
         }
+
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public async Task<IEnumerable<T>> QueryAsync(QueryParams<T> parameters, CancellationToken cancellationToken = default)
         {
@@ -53,11 +61,11 @@ namespace Ambev.DeveloperEvaluation.Application.Commom
             if (EqualityComparer<TValue>.Default.Equals(value, default))
                 throw new ArgumentNullException(nameof(value));
 
-            var serializedValue = JsonSerializer.Serialize(value);
+            var serializedValue = JsonSerializer.Serialize(value, _jsonOptions);
 
             var cacheOptions = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1) // Cache expires in 1 day
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
             };
 
             await _cache.SetStringAsync(cacheKey, serializedValue, cacheOptions, cancellationToken);

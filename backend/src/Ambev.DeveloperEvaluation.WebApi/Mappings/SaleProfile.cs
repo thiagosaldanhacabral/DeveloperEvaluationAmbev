@@ -1,6 +1,8 @@
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using AutoMapper;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Mappings;
@@ -8,12 +10,12 @@ namespace Ambev.DeveloperEvaluation.WebApi.Mappings;
 /// <summary>
 /// Mapping profile for CreateSale operations.
 /// </summary>
-public class CreateSaleRequestProfile : Profile
+public class SaleProfile : Profile
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="CreateSaleRequestProfile"/> class.
+    /// Initializes a new instance of the <see cref="SaleProfile"/> class.
     /// </summary>
-    public CreateSaleRequestProfile()
+    public SaleProfile()
     {
         // Map from CreateSaleRequest to CreateSaleCommand
         CreateMap<CreateSaleRequest, CreateSaleCommand>()
@@ -44,5 +46,14 @@ public class CreateSaleRequestProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.BranchId))
             .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.BranchName))
             .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location));
+
+        CreateMap<CreateSaleResult, CreateSaleResponse>();
+
+        CreateMap<GetSaleRequest, GetSaleQuery>()
+            .ForCtorParam("id", opt => opt.MapFrom(src => src.Id));
+
+        CreateMap<Sale, GetSaleResult>();
+
+        CreateMap<GetSaleResult, GetSaleResponse>();
     }
 }
