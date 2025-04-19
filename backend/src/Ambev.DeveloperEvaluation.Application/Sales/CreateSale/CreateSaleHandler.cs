@@ -50,13 +50,9 @@ public class CreateSaleHandler(
         // Add sale items
         foreach (var item in command.SaleItems)
         {
-            var product = item.Product.Id == Guid.Empty
+            var product = (item.Product.Id == Guid.Empty
                 ? await productRepository.CreateAsync(item.Product, cancellationToken)
-                : await productRepository.GetByIdAsync(item.ProductId, cancellationToken);
-
-            if (product == null)
-                throw new InvalidOperationException($"Product with ID {item.ProductId} could not be found or created.");
-
+                : await productRepository.GetByIdAsync(item.ProductId, cancellationToken)) ?? throw new InvalidOperationException($"Product with ID {item.ProductId} could not be found or created.");
             var saleItem = new SaleItem(Guid.Empty, item.Quantity, product);
             sale.AddItem(saleItem);
         }

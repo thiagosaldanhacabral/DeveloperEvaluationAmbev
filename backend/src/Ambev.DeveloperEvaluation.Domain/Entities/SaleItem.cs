@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Validation;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
@@ -23,6 +24,7 @@ public class SaleItem : BaseEntity
     /// <summary>
     /// Gets the sale associated with the sale item.
     /// </summary>
+    [BsonIgnore]
     public Sale? Sale { get; private set; }
 
     /// <summary>

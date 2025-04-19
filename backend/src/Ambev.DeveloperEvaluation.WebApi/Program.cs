@@ -17,6 +17,8 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Bson.Serialization;
+using Ambev.DeveloperEvaluation.ORM.Interceptators;
+using MongoDB.Driver.Core.Configuration;
 
 namespace Ambev.DeveloperEvaluation.WebApi;
 
@@ -37,12 +39,7 @@ public static class Program
             builder.AddBasicHealthChecks();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<DefaultContext>(options =>
-                options.UseNpgsql(
-                    builder.Configuration.GetConnectionString("PostgreSqlConnection"),
-                    b => b.MigrationsAssembly("Ambev.DeveloperEvaluation.ORM")
-                )
-            );
+            var connectionStringPostgres = builder.Configuration.GetConnectionString("PostgreSqlConnection");
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
 
@@ -59,6 +56,16 @@ public static class Program
             });
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+            builder.Services.AddSingleton<UtcDateInterceptor>();
+
+            builder.Services.AddDbContext<DefaultContext>((serviceProvider, options) =>
+            {
+                var interceptor = serviceProvider.GetRequiredService<UtcDateInterceptor>();
+                options.UseNpgsql(connectionStringPostgres, b => b.MigrationsAssembly("Ambev.DeveloperEvaluation.ORM"));
+                options.AddInterceptors(interceptor);
+            });
+
 
             builder.Services.AddStackExchangeRedisCache(options =>
             {
