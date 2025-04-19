@@ -2,50 +2,48 @@ using AutoMapper;
 using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
-using Ambev.DeveloperEvaluation.Domain.Entities;
-using Ambev.DeveloperEvaluation.Application.Commom;
-using Ambev.DeveloperEvaluation.Application.Interfaces;
+using Ambev.DeveloperEvaluation.Application.Users.GetUser;
+
 
 namespace Ambev.DeveloperEvaluation.Application.Users.GetUser;
 
 /// <summary>
 /// Handler for processing GetUserCommand requests
 /// </summary>
-public class GetUserHandler(
-    IUserRepository userRepository,
-    IUserQueryRepository userQueryRepository,
-    IMapper mapper,
-    IValidator<GetUserQuery> validator) : IRequestHandler<GetUserQuery, GetUserResult>
+public class GetUserHandler : IRequestHandler<GetUserQuery, GetUserResult>
 {
-    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-    private readonly IUserQueryRepository _userQueryRepository = userQueryRepository ?? throw new ArgumentNullException(nameof(userQueryRepository));
-    private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-    private readonly IValidator<GetUserQuery> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+    private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
 
+    /// <summary>
+    /// Initializes a new instance of GetUserHandler
+    /// </summary>
+    /// <param name="userRepository">The user repository</param>
+    /// <param name="mapper">The AutoMapper instance</param>
+    /// <param name="validator">The validator for GetUserCommand</param>
+    public GetUserHandler(
+        IUserRepository userRepository,
+        IMapper mapper)
+    {
+        _userRepository = userRepository;
+        _mapper = mapper;
+    }
+
+    /// <summary>
+    /// Handles the GetUserCommand request
+    /// </summary>
+    /// <param name="request">The GetUser command</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The user details if found</returns>
     public async Task<GetUserResult> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
-        // Validate the request
-        var validationResult = await _validator.ValidateAsync(request, cancellationToken);
+        var validator = new GetUserValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
 
-        // Attempt to retrieve the user from the cache
-        var user = await GetUserFromCacheOrRepositoryAsync(request.Id, cancellationToken);
-
-        // Map the user entity to the result DTO
+        var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken) ?? throw new KeyNotFoundException($"User with ID {request.Id} not found");
         return _mapper.Map<GetUserResult>(user);
-    }
-
-    private async Task<User> GetUserFromCacheOrRepositoryAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var parameters = new QueryParams<User>
-        {
-            Filter = u => u.Id.Equals(userId)
-        };
-
-        var userCache = await _userQueryRepository.QueryAsync(parameters, cancellationToken);
-        return userCache?.FirstOrDefault()
-            ?? await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new KeyNotFoundException($"User with ID {userId} not found");
     }
 }
